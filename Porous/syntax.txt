@@ -1,0 +1,115 @@
+﻿Porous Syntax Tutorial
+by Mondobe Games
+
+Porous is a stack-based language like Forth or Factor. This means that there is an internal stack that values are pushed onto, and all operations are done on the stack. For example:
+
+3
+
+pushes the value 3 onto the stack, and
+
+5 6 -4
+
+pushes 5 onto the stack, followed by 6 and -4. 
+
++
+
+pops the top two values off of the stack, adds them, then pushes the result. -, *, /, and % (modulo) work the same way. Integers aren't the only type: the built-in types are int, char, bool, functions, pointers to any type, and arrays of any type. Before, going over the types, here are some basic stack manipulation operations that work on any type:
+
+dup: duplicates the item on top of the stack
+drop: removes the top item of the stack
+swap: swaps the top item of the stack and the item below it
+over: duplicates the item below the top of the stack and brings above the top item (so "1 2 over" would result in 1, 2, and 1)
+
+Functions can be defined anywhere inside a program like so:
+
+(int : int int)
+{
+	dup 100 -
+}
+
+The (int : int) is the function's signature: the function uses an integer from the top of the stack (and will fail if the top of the stack is not an integer!) and replaces it with another integer. In this case, the function duplicates the integer on the top of the stack, then subtracts 100 from this duplicated integer. Functions can be executed with a semicolon, so:
+
+250
+(int : int int)
+{
+	dup 100 -
+} ;
+
+ends up with 250 and 150 in the stack. Functions, as well as any other constant value, can be defined globally like so:
+
+subValue = 100
+
+firstFunc = (int : int int)
+{
+	dup subValue -
+}
+
+testValues = (:)
+{
+	0   firstFunc ; drop drop
+	10  firstFunc ; drop drop
+	20  firstFunc ; drop drop
+	55  firstFunc ; drop drop
+	-8  firstFunc ; drop drop
+	103 firstFunc ; drop drop
+}
+
+When running a program, the interpreter looks for a function named "main". (By the way, from here, code examples get more complicated. Comments are made in the C# style: two forward slashes followed by the comment.)
+As for those other types, boolean values are fairly straightforward, as in any other language. "true" and "false" push these respective values onto the stack, and the typical boolean operations and comparisons work:
+
+==: tests the two items on the stack for equality
+>: pushes a true value only if the integer below the top of the stack is higher than the integer on the top (i.e. "10 2 >" leaves a true value) (<, >=, and <= work similarly!)
+&&: pushes a true value only if the two booleans on top of the stack are both true (|| pushes true if either value is true)
+!: inverts the boolean on top of the stack
+
+Character values are denoted by a single character inside single quotes, so 'a' pushes a lowercase A onto the stack.
+
+Now for control flow. Porous provides only one control flow operator by default: "while". If the top item on the stack is a function whose return types are the exact same as its parameter types with one bool appended on the end, "while" will repeatedly run the function and remove the bool from the stack until its value is false. Here's an example.
+
+squareUntilGreaterThanOneHundred = (int : int)
+{
+	(int : int bool)	// Takes an int, leaves an int and a bool on the stack
+	{
+		dup *			// Duplicates the top of the stack and multiplies it by the item below the top (in this case, the number on top of the stack is squared)
+		dup 100 <=		// Duplicates the top of the stack and tests whether or not it is less than or equal to 100
+	}
+	while				// Executes this function repeatedly until the top of the stack is false (meaning the number is greater than 100)
+}
+
+A very versatile tool for control flow is the ? operator, which works similarly to the tertiary operator in C#. The ? operator takes a boolean off the top of the stack and the two items below it, which must be of the same type. If the boolean is true, then the lower item is returned. If it is false, the higher item does. For example:
+
+'t' 'f' true ?
+
+leaves a value of 't'. This can also be used as an if/else statement:
+
+isZeroEvenOrOdd = (: char)
+{
+	(: char) { 'e' }	// E for Even
+	(: char) { 'o' }	// O for Odd
+	0					// Push 0 onto the stack
+	2 %					// Modulo the top of the stack with 2 (in this case, 0 % 2 = 0)
+	0 ==				// Test whether the top of the stack is 0 (in this case, this is true)
+	?					// Keeps the first function if true, and the second function if false (in this case, it keeps the first function)
+	;					// Executes the function (in this case, 'e' is pushed onto the stack)
+}
+
+Input and output are built off of two basic built-in functions. The . instruction pops the top character off the stack and prints it. This - finally - allows us to print "Hello, world!":
+
+main = (:)
+{
+	'H' . 'e' . 'l' . 'l' . 'o' . ',' . ' ' . 
+	'W' . 'o' . 'r' . 'l' . 'd' . '!' .
+}
+
+It's not pretty with only the basic character types. String literals can make this much cleaner.
+One important thing to note is that the . instruction ONLY works with char values. Luckily, a program has already been written for printing integer values. To use it, simply add "import printInt" to the top of any program. This allows the function "printInt" to be used anywhere, like so:
+
+import printInt
+
+main = (:)
+{
+	1 printInt ;
+	2 printInt ;
+	-54260 printInt ;
+}
+
