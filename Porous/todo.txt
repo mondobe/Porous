@@ -1,35 +1,37 @@
 ﻿TODO
 
-Lexer
-Parser
-Convert ParseTokens to generic instructions (Push int)
-Convert generic instructions to specific instructions
-Type check functions
-Execute functions
-Explicit generics in functions
-Arithmetic instructions
-Stack manipulation instructions
-Push function instruction
-Do instruction
-Push bool instruction
-Boolean algebra
-Push char instruction
-While instruction
-Tertiary instruction
-Imports
-Implement heap
-Reference/deref instruction
-Automatically free pointers/reference counting
-Push array instruction
-Array access
-Push string literal
-Defining structs
-Create struct instruction
-Access struct fields instruction
+	Parser
+	Convert ParseTokens to generic instructions (Push int)
+	Convert generic instructions to specific instructions
+	Type check functions
+	Execute functions
+	Explicit generics in functions
+	Function overloading
+	Arithmetic instructions
+	Stack manipulation instructions
+	Push function instruction
+	Do instruction
+	Push bool instruction
+	Boolean algebra
+	Push char instruction
+	While instruction
+	Tertiary instruction
+	Imports
+	Implement heap
+	Reference/deref instruction
+	Automatically free pointers/reference counting
+	Push array instruction
+	Array access
+	Push string literal
+	Defining structs
+	Create struct instruction
+	Access struct fields instruction
+	Operator overloading
 
 DOING
 
-
+	Lexer
 
 DONE
 
+	
