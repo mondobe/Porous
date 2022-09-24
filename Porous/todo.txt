@@ -1,6 +1,5 @@
 ﻿TODO
 
-	Parser
 	Convert ParseTokens to generic instructions (Push int)
 	Convert generic instructions to specific instructions
 	Type check functions
@@ -30,8 +29,9 @@
 
 DOING
 
-	Lexer
+
 
 DONE
 
-	
+	Lexer
+	Parser
