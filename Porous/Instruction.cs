@@ -8,12 +8,16 @@ namespace Porous
 {
     public abstract class Instruction 
     {
+        public abstract PSignatureType signature { get; }
+
         public abstract void Execute(ref Stack<object> stack);
     }
 
     public class PushIntInstruction : Instruction
     {
         int toPush;
+
+        public override PSignatureType signature => new(new List<PType>(), new List<PType> { PType.intType });
 
         public PushIntInstruction(int toPush)
         {
@@ -30,6 +34,8 @@ namespace Porous
     {
         char toPush;
 
+        public override PSignatureType signature => new(new List<PType>(), new List<PType> { PType.charType });
+
         public PushCharInstruction(char toPush)
         {
             this.toPush = toPush;
@@ -44,6 +50,8 @@ namespace Porous
     public class PushBoolInstruction : Instruction
     {
         bool toPush;
+
+        public override PSignatureType signature => new(new List<PType>(), new List<PType> { PType.boolType });
 
         public PushBoolInstruction(bool toPush)
         {

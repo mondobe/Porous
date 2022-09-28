@@ -14,29 +14,6 @@ namespace Porous
         static void Main(string[] args)
         {
             ProcessProgram(@"
-include printInt
-
-main = ( : )
-{	
-	 1 1 fibo
-}
-
-fibo = (int int : )
-{
-	over printInt
-	',' . ' ' .
-	dup printInt
-	',' . ' ' .
-
-	(int int : int int bool)
-	{
-		swap over +
-		dup printInt
-		',' . ' ' .
-		true
-	} while
-	drop drop
-}
 ");
         }
 
@@ -48,14 +25,17 @@ fibo = (int int : )
         /// <param name="program">The given program. Includes all necessary functions and declarations. Newlines can be included.</param>
         /// <returns>A dictionary of Porous functions and declarations that may or may not contain a main function.</returns>
         /// <exception cref="NotImplementedException">Not implemented yet.</exception>
-        public static Dictionary<string, PValue> ProcessProgram(string program)
+        public static Dictionary<string, object> ProcessProgram(string program)
         {
             // Lex and parse the program given
-            List<Token> tokens = LexerParser.Lex(program, true);
-            List<ParseToken> pts = LexerParser.Parse(tokens, true);
+            List<Token> tokens = LexerParser.Lex(program, false);
+            List<ParseToken> pts = LexerParser.Parse(tokens, false);
 
             // Write the list of parse tokens (for debug purposes)
             Console.WriteLine(pts.ParseTokensToString());
+
+            foreach(ParseToken token in pts)
+                Console.WriteLine(PType.ParseType(token));
 
             throw new NotImplementedException();
         }
