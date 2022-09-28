@@ -14,49 +14,28 @@ namespace Porous
         static void Main(string[] args)
         {
             ProcessProgram(@"
-printInt = (int : )
-{
-	dup 0 <
-	(int : int) { 0 drop } swap
-	(int : int) { -1 * '-' . } swap
-	? do
-	printPart
+include printInt
+
+main = ( : )
+{	
+	 1 1 fibo
 }
 
-printPart = (int : )
+fibo = (int int : )
 {
-	dup
-	(int : ) { digitToChar . } swap
-	(int : )
+	over printInt
+	',' . ' ' .
+	dup printInt
+	',' . ' ' .
+
+	(int int : int int bool)
 	{
-		dup 10 / printPart
-		10 % digitToChar .
-	} swap
-	9 > ? do
-}
-
-digitToChar = (int : char)
-{
-	dup
-	'0' swap
-	'1' swap 1 == ?
-	over
-	'2' swap 2 == ?
-	over
-	'3' swap 3 == ?
-	over
-	'4' swap 4 == ?
-	over
-	'5' swap 5 == ?
-	over
-	'6' swap 6 == ?
-	over
-	'7' swap 7 == ?
-	over
-	'8' swap 8 == ?
-	over
-	'9' swap 9 == ?
-	swap drop
+		swap over +
+		dup printInt
+		',' . ' ' .
+		true
+	} while
+	drop drop
 }
 ");
         }
@@ -69,11 +48,11 @@ digitToChar = (int : char)
         /// <param name="program">The given program. Includes all necessary functions and declarations. Newlines can be included.</param>
         /// <returns>A dictionary of Porous functions and declarations that may or may not contain a main function.</returns>
         /// <exception cref="NotImplementedException">Not implemented yet.</exception>
-        public static Dictionary<string, TPValue> ProcessProgram(string program)
+        public static Dictionary<string, PValue> ProcessProgram(string program)
         {
             // Lex and parse the program given
-            List<Token> tokens = LexerParser.Lex(program);
-            List<ParseToken> pts = LexerParser.Parse(tokens, false);
+            List<Token> tokens = LexerParser.Lex(program, true);
+            List<ParseToken> pts = LexerParser.Parse(tokens, true);
 
             // Write the list of parse tokens (for debug purposes)
             Console.WriteLine(pts.ParseTokensToString());
