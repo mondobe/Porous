@@ -14,6 +14,7 @@ namespace Porous
         static void Main(string[] args)
         {
             ProcessProgram(@"
+(int : char)
 ");
         }
 

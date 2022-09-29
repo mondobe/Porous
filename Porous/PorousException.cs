@@ -7,6 +7,11 @@ using UtahBase.Testing;
 
 namespace Porous
 {
+    /// <summary>
+    /// An exception class for Porous compiler errors found while processing or executing
+    /// a program. Seeing a PorousException alerts the user that something is either wrong
+    /// with their program or this one.
+    /// </summary>
     public class PorousException : Exception
     {
         public PorousException() : base()

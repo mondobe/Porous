@@ -135,12 +135,25 @@ genSig block : blockType stmt genBlock;
 word = stmt : global;
 ";
 
+        /// <summary>
+        /// Lexes a given string consistently with the lexer rules of Porous. Lexer brought to you by T-Lex.
+        /// </summary>
+        /// <param name="program">The given string, usually direct from the user.</param>
+        /// <param name="verbose">Whether or not to display debug information about the lexing process 
+        /// (activating this makes the program slower!)</param>
+        /// <returns>A series of tokens that more fully describes the nature of the program</returns>
         public static List<Token> Lex(string program, bool verbose = false)
         {
             Lexer l = CreateLexerFromString.StringToLexer(lexer, verbose);
             return l.ApplyAll(program, verbose, 50000);
         }
 
+        /// <summary>
+        /// Parses a string of tokens consistently with the parser rules of Porous. Parser brought to you by Utah.
+        /// </summary>
+        /// <param name="tox">The given string of tokens, usually from the lexer (<see cref="Lex(string, bool)"/></param>
+        /// <param name="verbose">Whether or not to display debug information about the parsing process</param>
+        /// <returns>A tree of ParseTokens that can be easily processed to extract a full program</returns>
         public static List<ParseToken> Parse(List<Token> tox, bool verbose = false)
         {
             Parser p = CreateParserFromString.FromString(parser, verbose);
