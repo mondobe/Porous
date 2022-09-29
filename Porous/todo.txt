@@ -1,18 +1,12 @@
 ﻿TODO
 
-	Convert ParseTokens to generic instructions (Push int)
-	Convert generic instructions to specific instructions
-	Type check functions
-	Execute functions
 	Explicit generics in functions
 	Function overloading
 	Arithmetic instructions
 	Stack manipulation instructions
 	Push function instruction
 	Do instruction
-	Push bool instruction
 	Boolean algebra
-	Push char instruction
 	While instruction
 	Tertiary instruction
 	Imports
@@ -29,9 +23,14 @@
 
 DOING
 
-
+	Type check functions
+	Execute functions
 
 DONE
 
 	Lexer
 	Parser
+	Convert ParseTokens to generic instructions (Push int)
+	Convert generic instructions to specific instructions
+	Push bool instruction
+	Push char instruction

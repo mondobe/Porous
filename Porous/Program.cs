@@ -14,7 +14,9 @@ namespace Porous
         static void Main(string[] args)
         {
             ProcessProgram(@"
-(int : char)
+45
+'f'
+true
 ");
         }
 
@@ -33,10 +35,14 @@ namespace Porous
             List<ParseToken> pts = LexerParser.Parse(tokens, false);
 
             // Write the list of parse tokens (for debug purposes)
-            Console.WriteLine(pts.ParseTokensToString());
+            // Console.WriteLine(pts.ParseTokensToString());
 
-            foreach(ParseToken token in pts)
-                Console.WriteLine(PType.ParseType(token));
+            Interpreter interpreter = new();
+
+            foreach (ParseToken token in pts)
+                interpreter.DebugInterpret(DirectionProcessor.ProcessDirection(token));
+
+            Console.WriteLine(interpreter.DebugToString());
 
             throw new NotImplementedException();
         }

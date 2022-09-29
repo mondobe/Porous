@@ -107,6 +107,15 @@ namespace Porous
             this.outs = outs;
         }
 
+        public void Execute(ref Stack<PType> typeStack)
+        {
+            for (int i = ins.Count - 1; i >= 0; i--)
+                if (typeStack.Pop() != ins[i])
+                    throw new PorousException("Mismatched types for signature.");
+            foreach (PType o in outs)
+                typeStack.Push(o);
+        }
+
         public override string ToString()
         {
             string toRet = "(";

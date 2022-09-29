@@ -19,7 +19,7 @@ namespace Porous
         /// </summary>
         /// <returns>An instruction that fully describes the specifics and implementation of 
         /// this direction.</returns>
-        public abstract Instruction Resolve();
+        public abstract Instruction Resolve(Stack<PType> typeStack);
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ namespace Porous
             this.toPush = toPush;
         }
 
-        public override Instruction Resolve()
+        public override Instruction Resolve(Stack<PType> typeStack)
         {
             return new PushIntInstruction(toPush);
         }
@@ -52,7 +52,7 @@ namespace Porous
             this.toPush = toPush;
         }
 
-        public override Instruction Resolve()
+        public override Instruction Resolve(Stack<PType> typeStack)
         {
             return new PushCharInstruction(toPush);
         }
@@ -70,7 +70,7 @@ namespace Porous
             this.toPush = toPush;
         }
 
-        public override Instruction Resolve()
+        public override Instruction Resolve(Stack<PType> typeStack)
         {
             return new PushBoolInstruction(toPush);
         }

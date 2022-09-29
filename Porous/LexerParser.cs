@@ -15,6 +15,11 @@ namespace Porous
     public static class LexerParser
     {
         private const string lexer = @"
+:string=
+REQUIRE dq
+IF dq NEXT ELSE REPEAT
+WRAP BACK ADD string ADD stmt ADD expr
+
 :comment=
 REQUIRE /
 REQUIRE /
