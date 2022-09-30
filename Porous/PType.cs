@@ -68,7 +68,7 @@ namespace Porous
                 "char" => charType,
                 "bool" => boolType,
                 // Otherwise, throw an error.
-                _ => throw new PorousException(pt, "Unrecognized type. Are you sure this is a type?")
+                _ => new PGenericType(pt.content)
             };
         }
 
@@ -76,6 +76,15 @@ namespace Porous
         {
             return name;
         }
+
+        public virtual PType ReplaceGenerics(Dictionary<string, PType> generics) => this;
+    }
+
+    public class PGenericType : PType
+    {
+        public PGenericType(string name) : base(name) { }
+
+        public override PType ReplaceGenerics(Dictionary<string, PType> generics) => generics[name];
     }
 
     /// <summary>
@@ -125,6 +134,14 @@ namespace Porous
             foreach (PType o in outs)
                 toRet += " " + o;
             return toRet + ")";
+        }
+
+        public override PSignatureType ReplaceGenerics(Dictionary<string, PType> generics)
+        {
+            PSignatureType nSig = new(new List<PType>(), new List<PType>());
+            ins.ForEach(x => nSig.ins.Add(x.ReplaceGenerics(generics)));
+            outs.ForEach(x => nSig.outs.Add(x.ReplaceGenerics(generics)));
+            return nSig;
         }
     }
 }

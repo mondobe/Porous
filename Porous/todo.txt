@@ -3,7 +3,6 @@
 	Explicit generics in functions
 	Function overloading
 	Stack manipulation instructions
-	Push function instruction
 	Do instruction
 	Boolean algebra
 	While instruction
@@ -22,8 +21,7 @@
 
 DOING
 
-	Type check functions
-	Execute functions
+	Global dictionary
 
 DONE
 
@@ -34,3 +32,6 @@ DONE
 	Push bool instruction
 	Push char instruction
 	Arithmetic instructions
+	Type check functions
+	Execute functions
+	Push function instruction

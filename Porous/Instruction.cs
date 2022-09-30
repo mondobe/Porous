@@ -96,6 +96,23 @@ namespace Porous
         }
     }
 
+    public class PushFunctionInstruction : Instruction
+    {
+        Function toPush;
+
+        public override PSignatureType signature => new(new List<PType>(), new List<PType> { toPush.signature });
+
+        public PushFunctionInstruction(Function toPush, ParseToken token) : base(token)
+        {
+            this.toPush = toPush;
+        }
+
+        public override void Execute(ref Stack<object> stack)
+        {
+            stack.Push(toPush);
+        }
+    }
+
     public class IntArithmeticInstruction : Instruction
     {
         Func<int, int, int> operation;
@@ -112,6 +129,37 @@ namespace Porous
             int rhs = (int)stack.Pop();
             int lhs = (int)stack.Pop();
             stack.Push(operation.Invoke(lhs, rhs));
+        }
+    }
+
+    public class DoInstruction : Instruction
+    {
+        PSignatureType _signature;
+
+        public override PSignatureType signature
+        {
+            get
+            {
+                PSignatureType toRet = new(new List<PType>(), new List<PType>());
+                toRet.ins.AddRange(_signature.ins);
+                toRet.outs.AddRange(_signature.outs);
+                toRet.ins.Add(_signature);
+                toRet.outs.Add(_signature);
+                return toRet;
+            }
+        }
+
+        public DoInstruction(PSignatureType signature, ParseToken token) : base(token) 
+        {
+            _signature = signature;
+        }
+
+        public override void Execute(ref Stack<object> stack)
+        {
+            Function func = (Function)stack.Pop();
+            foreach (Instruction i in func)
+                i.Execute(ref stack);
+            stack.Push(func);
         }
     }
 }

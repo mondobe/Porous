@@ -14,10 +14,9 @@ namespace Porous
         static void Main(string[] args)
         {
             ProcessProgram(@"
-false
-100
-31
--
+5
+(int : int) { 2 * }
+:
 ");
         }
 

@@ -49,7 +49,22 @@ namespace Porous
                     _ => throw new PorousException(pt, "Operation not yet implemented.")
                 }, pt);
 
-            throw new PorousException(pt, "Direction not recognized. Did you forget to include a file?");
+            if(pt.tags.Contains("blockType"))
+            {
+                List<Direction> funcBody = new();
+                List<ParseToken> directions = pt.children[1].children;
+                for (int i = 1; i < directions.Count - 1; i++)
+                    funcBody.Add(ProcessDirection(directions[i]));
+                return new PushFunctionDirection(
+                    new GenericFunction((PSignatureType)PType.ParseType(pt.children[0]), funcBody, new List<string>())
+                    , pt);
+            }
+
+            return pt.content switch
+            {
+                ":" => new DoDirection(pt),
+                _ => throw new PorousException(pt, "Direction not recognized. Did you forget to include a file?")
+            };
         }
     }
 }

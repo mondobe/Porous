@@ -47,7 +47,7 @@ namespace Porous
             this.toPush = toPush;
         }
 
-        public override Instruction Resolve(Stack<PType> typeStack)
+        public override PushIntInstruction Resolve(Stack<PType> typeStack)
         {
             return new PushIntInstruction(toPush, token);
         }
@@ -65,7 +65,7 @@ namespace Porous
             this.toPush = toPush;
         }
 
-        public override Instruction Resolve(Stack<PType> typeStack)
+        public override PushCharInstruction Resolve(Stack<PType> typeStack)
         {
             return new PushCharInstruction(toPush, token);
         }
@@ -83,9 +83,24 @@ namespace Porous
             this.toPush = toPush;
         }
 
-        public override Instruction Resolve(Stack<PType> typeStack)
+        public override PushBoolInstruction Resolve(Stack<PType> typeStack)
         {
             return new PushBoolInstruction(toPush, token);
+        }
+    }
+
+    public class PushFunctionDirection : Direction
+    {
+        GenericFunction toPush;
+
+        public PushFunctionDirection(GenericFunction toPush, ParseToken token) : base(token)
+        {
+            this.toPush = toPush;
+        }
+
+        public override PushFunctionInstruction Resolve(Stack<PType> typeStack)
+        {
+            return new PushFunctionInstruction(toPush.TypeCheck(new List<PType>()), token);
         }
     }
 
@@ -98,13 +113,25 @@ namespace Porous
             this.operation = operation;
         }
 
-        public override Instruction Resolve(Stack<PType> typeStack)
+        public override IntArithmeticInstruction Resolve(Stack<PType> typeStack)
         {
             List<PType> pList = typeStack.ToList();
             if (pList[0] != PType.intType || pList[1] != PType.intType)
                 throw new PorousException("Arithmetic operations must be called on two integers.");
 
             return new IntArithmeticInstruction(operation, token);
+        }
+    }
+
+    public class DoDirection : Direction
+    {
+        public DoDirection(ParseToken token) : base(token) { }
+
+        public override DoInstruction Resolve(Stack<PType> typeStack)
+        {
+            if (typeStack.Peek() is PSignatureType s)
+                return new DoInstruction(s, token);
+            throw new PorousException(token, "Tried to call something that was not a function.");
         }
     }
 }

@@ -37,6 +37,10 @@ WRAP BACK ADD include
 :ops=
 TAGCHARS +-*/%<> oper
 
+:do=
+IF colon { ADD stmt CANCEL }
+ELSE CANCEL
+
 :boolOps=
 TAGCHARS <> nBoolOper
 
