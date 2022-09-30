@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using UtahBase.Testing;
@@ -29,13 +30,24 @@ namespace Porous
                 throw new PorousException(pt, "Non-statement used like a direction. This could be an unimplemented feature.");
 
             if (pt.tags.Contains("int"))
-                return new PushIntDirection(int.Parse(pt.content));
+                return new PushIntDirection(int.Parse(pt.content), pt);
 
             if (pt.tags.Contains("bool"))
-                return new PushBoolDirection(bool.Parse(pt.content));
+                return new PushBoolDirection(bool.Parse(pt.content), pt);
 
             if (pt.tags.Contains("char"))
-                return new PushCharDirection(pt.content[1]);
+                return new PushCharDirection(pt.content[1], pt);
+
+            if (pt.tags.Contains("oper"))
+                return new IntArithmeticDirection(pt.content switch
+                {
+                    "+" => (int lhs, int rhs) => lhs + rhs,
+                    "-" => (int lhs, int rhs) => lhs - rhs,
+                    "*" => (int lhs, int rhs) => lhs * rhs,
+                    "/" => (int lhs, int rhs) => lhs / rhs,
+                    "%" => (int lhs, int rhs) => lhs % rhs,
+                    _ => throw new PorousException(pt, "Operation not yet implemented.")
+                }, pt);
 
             throw new PorousException(pt, "Direction not recognized. Did you forget to include a file?");
         }

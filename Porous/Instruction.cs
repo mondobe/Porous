@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UtahBase.Testing;
 
 namespace Porous
 {
@@ -13,6 +14,13 @@ namespace Porous
     /// </summary>
     public abstract class Instruction 
     {
+        public ParseToken token;
+
+        protected Instruction(ParseToken token)
+        {
+            this.token = token;
+        }
+
         public abstract PSignatureType signature { get; }
 
         /// <summary>
@@ -21,6 +29,11 @@ namespace Porous
         /// <param name="stack">The data stack on which to execute this function. 
         /// The types of the values on top of the stack should match the inputs of the signature.</param>
         public abstract void Execute(ref Stack<object> stack);
+
+        public override string ToString()
+        {
+            return token.toSimpleString;
+        }
     }
 
     /// <summary>
@@ -32,7 +45,7 @@ namespace Porous
 
         public override PSignatureType signature => new(new List<PType>(), new List<PType> { PType.intType });
 
-        public PushIntInstruction(int toPush)
+        public PushIntInstruction(int toPush, ParseToken token) : base(token)
         {
             this.toPush = toPush;
         }
@@ -52,7 +65,7 @@ namespace Porous
 
         public override PSignatureType signature => new(new List<PType>(), new List<PType> { PType.charType });
 
-        public PushCharInstruction(char toPush)
+        public PushCharInstruction(char toPush, ParseToken token) : base(token)
         {
             this.toPush = toPush;
         }
@@ -72,7 +85,7 @@ namespace Porous
 
         public override PSignatureType signature => new(new List<PType>(), new List<PType> { PType.boolType });
 
-        public PushBoolInstruction(bool toPush)
+        public PushBoolInstruction(bool toPush, ParseToken token) : base(token)
         {
             this.toPush = toPush;
         }
@@ -80,6 +93,25 @@ namespace Porous
         public override void Execute(ref Stack<object> stack)
         {
             stack.Push(toPush);
+        }
+    }
+
+    public class IntArithmeticInstruction : Instruction
+    {
+        Func<int, int, int> operation;
+
+        public override PSignatureType signature => new(new List<PType> { PType.intType, PType.intType }, new List<PType> { PType.intType });
+
+        public IntArithmeticInstruction(Func<int, int, int> operation, ParseToken token) : base(token) 
+        {
+            this.operation = operation;
+        }
+
+        public override void Execute(ref Stack<object> stack)
+        {
+            int rhs = (int)stack.Pop();
+            int lhs = (int)stack.Pop();
+            stack.Push(operation.Invoke(lhs, rhs));
         }
     }
 }

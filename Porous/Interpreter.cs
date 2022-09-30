@@ -17,8 +17,10 @@ namespace Porous
             typeStack = new Stack<PType>();
         }
 
-        public void DebugInterpret(Direction direction)
+        public void DebugInterpret(Direction direction, bool verbose = true)
         {
+            if (verbose)
+                Console.WriteLine("Doing " + direction);
             Instruction instruction = direction.Resolve(typeStack);
             instruction.signature.Execute(ref typeStack);
             instruction.Execute(ref dataStack);
@@ -28,7 +30,9 @@ namespace Porous
         {
             string toRet = "";
 
-            for (int i = 0; i < dataStack.Count; i++)
+            int count = dataStack.Count;
+
+            for (int i = 0; i < count; i++)
                 toRet += dataStack.Pop() + "\t- " + typeStack.Pop() + "\n";
 
             return toRet;

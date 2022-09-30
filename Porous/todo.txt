@@ -2,7 +2,6 @@
 
 	Explicit generics in functions
 	Function overloading
-	Arithmetic instructions
 	Stack manipulation instructions
 	Push function instruction
 	Do instruction
@@ -34,3 +33,4 @@ DONE
 	Convert generic instructions to specific instructions
 	Push bool instruction
 	Push char instruction
+	Arithmetic instructions
