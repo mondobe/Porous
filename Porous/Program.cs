@@ -15,8 +15,8 @@ namespace Porous
         {
             ProcessProgram(@"
 5
-(int : int) { 2 * }
-:
+true
+(<P> <T> : T P) {  }
 ");
         }
 

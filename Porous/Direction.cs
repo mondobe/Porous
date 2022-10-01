@@ -100,7 +100,7 @@ namespace Porous
 
         public override PushFunctionInstruction Resolve(Stack<PType> typeStack)
         {
-            return new PushFunctionInstruction(toPush.TypeCheck(new List<PType>()), token);
+            return new PushFunctionInstruction(toPush.TypeCheck(new List<PType>(), typeStack), token);
         }
     }
 

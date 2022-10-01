@@ -1,6 +1,5 @@
 ﻿TODO
 
-	Explicit generics in functions
 	Function overloading
 	Stack manipulation instructions
 	Do instruction
@@ -35,3 +34,4 @@ DONE
 	Type check functions
 	Execute functions
 	Push function instruction
+	Explicit generics in functions

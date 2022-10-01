@@ -1,4 +1,5 @@
-﻿using UtahBase.Testing;
+﻿using System.Security.Cryptography.X509Certificates;
+using UtahBase.Testing;
 
 namespace Porous
 {
@@ -61,6 +62,9 @@ namespace Porous
                 return sig;
             }
 
+            if (pt.tags.Contains("generic"))
+                return new PGenericType(pt.children[1].content, true);
+
             // Is it the basic types recognized by Porous?
             return pt.content switch
             {
@@ -78,13 +82,31 @@ namespace Porous
         }
 
         public virtual PType ReplaceGenerics(Dictionary<string, PType> generics) => this;
+
+        public virtual void MatchGenerics(ref Dictionary<string, PType> generics, PType specific) 
+        {
+            Console.WriteLine("Matching " + name + " with " + specific.name);
+            if (!specific.Equals(this))
+                throw new PorousException("Type mismatch found in generic resolution.");
+        }
     }
 
     public class PGenericType : PType
     {
-        public PGenericType(string name) : base(name) { }
+        public PGenericType(string name, bool determines = false) : base(name) 
+        {
+            this.determines = determines;
+        }
+        bool determines;
 
         public override PType ReplaceGenerics(Dictionary<string, PType> generics) => generics[name];
+
+        public override void MatchGenerics(ref Dictionary<string, PType> generics, PType specific)
+        {
+            Console.WriteLine("Matching " + name + " with " + specific.name);
+            if (determines)
+                generics.Add(name, specific);
+        }
     }
 
     /// <summary>
@@ -119,8 +141,11 @@ namespace Porous
         public void Execute(ref Stack<PType> typeStack)
         {
             for (int i = ins.Count - 1; i >= 0; i--)
-                if (typeStack.Pop() != ins[i])
-                    throw new PorousException("Mismatched types for signature.");
+            {
+                PType top = typeStack.Pop();
+                if (!top.Equals(ins[i]))
+                    throw new PorousException("Mismatched types for signature. Should be " + ins[i] + ", was " + top);
+            }
             foreach (PType o in outs)
                 typeStack.Push(o);
         }
@@ -142,6 +167,35 @@ namespace Porous
             ins.ForEach(x => nSig.ins.Add(x.ReplaceGenerics(generics)));
             outs.ForEach(x => nSig.outs.Add(x.ReplaceGenerics(generics)));
             return nSig;
+        }
+
+        public override void MatchGenerics(ref Dictionary<string, PType> generics, PType specific) 
+        {
+            Console.WriteLine("Matching " + name + " with " + specific.name);
+            if (specific is PSignatureType s)
+            {
+                if (s.ins.Count != ins.Count || s.outs.Count != outs.Count)
+                    throw new PorousException("Attempted to resolve signature generic with the wrong amount of types.");
+                for (int i = 0; i < ins.Count; i++)
+                    ins[i].MatchGenerics(ref generics, s.ins[i]);
+                for (int i = 0; i < outs.Count; i++)
+                    outs[i].MatchGenerics(ref generics, s.outs[i]);
+            }
+            else
+                throw new PorousException("Attempted to resolve signature generic with non-signature type.");
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is PSignatureType other)
+                return !ins.Select((t, i) => other.ins[i] == t).Contains(false)
+                    && !outs.Select((t, i) => other.outs[i] == t).Contains(false);
+            return false;
         }
     }
 }

@@ -10,25 +10,23 @@ namespace Porous
     public class GenericFunction : IEnumerable<Direction>
     {
         public PSignatureType signature;
-        public List<string> generics;
         public List<Direction> body;
 
         public GenericFunction(PSignatureType signature, List<Direction> body, List<string> generics)
         {
             this.signature = signature;
             this.body = body;
-            this.generics = generics;
         }
 
-        public Function TypeCheck(List<PType> generics)
+        public Function TypeCheck(List<PType> generics, Stack<PType> typeStack)
         {
+            Console.WriteLine("Type checking " + signature);
+
             Dictionary<string, PType> replacements = new();
 
-            if (this.generics.Count != generics.Count)
-                throw new PorousException(body[0].token, "Number of generics does not match.");
-
-            for (int i = 0; i < generics.Count; i++)
-                replacements.Add(this.generics[i], generics[i]);
+            List<PType> specifics = new(typeStack);
+            for (int i = 0; i < signature.ins.Count; i++)
+                signature.ins[i].MatchGenerics(ref replacements, specifics[signature.ins.Count - i - 1]);
 
             Function nFunc = new(signature.ReplaceGenerics(replacements), new List<Instruction>());
             Stack<PType> checkStack = new(signature.ReplaceGenerics(replacements).ins);
@@ -42,8 +40,9 @@ namespace Porous
 
             for(int i = signature.outs.Count - 1; i >= 0; i--)
             {
-                if (checkStack.Pop() != signature.outs[i])
-                    throw new PorousException(body[0].token, "Ending signature of function does not match result of type checking!");
+                Console.WriteLine("Out: " + signature.outs[i].ReplaceGenerics(replacements) + "\tGot: " + checkStack.Peek());
+                if (!checkStack.Pop().Equals(signature.outs[i].ReplaceGenerics(replacements)))
+                    throw new PorousException("Ending signature of function does not match result of type checking!");
             }
 
             if (checkStack.Count != 0)

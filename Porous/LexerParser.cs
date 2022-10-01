@@ -132,10 +132,8 @@ word :: stmt;
 
 { stmt* } : block;
 
-< word* > : generics;
-sig generics : genSig;
+< word > : generic type;
 sig block : blockType stmt;
-genSig block : blockType stmt genBlock;
 
 [ expr* ] : expr array;
 
