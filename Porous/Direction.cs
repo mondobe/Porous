@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using UtahBase.Testing;
@@ -132,6 +133,21 @@ namespace Porous
             if (typeStack.Peek() is PSignatureType s)
                 return new DoInstruction(s, token);
             throw new PorousException(token, "Tried to call something that was not a function.");
+        }
+    }
+
+    public class CallDirection : Direction
+    {
+        string toCall;
+
+        public CallDirection(string toCall, ParseToken token) : base(token)
+        {
+            this.toCall = toCall;
+        }
+
+        public override Instruction Resolve(Stack<PType> typeStack)
+        {
+            return DirectionProcessor.workingDict[toCall].Resolve(typeStack);
         }
     }
 }

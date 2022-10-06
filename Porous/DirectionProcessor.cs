@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using UtahBase.Testing;
@@ -10,6 +9,15 @@ namespace Porous
 {
     public static class DirectionProcessor
     {
+        public static Dictionary<string, Direction> workingDict = new();
+        public static List<string> headers = new();
+
+        public static void Initalize()
+        {
+            workingDict = new Dictionary<string, Direction>();
+            headers = new List<string>();
+        }
+
         public static List<Direction> ExtractDirections(ParseToken pt)
         {
             if (!pt.tags.Contains("blockType") || pt.children[1].children.Count < 2)
@@ -59,6 +67,9 @@ namespace Porous
                     new GenericFunction((PSignatureType)PType.ParseType(pt.children[0]), funcBody, new List<string>())
                     , pt);
             }
+
+            if (headers.Contains(pt.content))
+                return new CallDirection(pt.content, pt);
 
             return pt.content switch
             {

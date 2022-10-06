@@ -20,7 +20,7 @@
 
 DOING
 
-	Global dictionary
+	ADD COMMENTS PLEASE FOR THE LOVE OF
 
 DONE
 
@@ -35,3 +35,4 @@ DONE
 	Execute functions
 	Push function instruction
 	Explicit generics in functions
+	Global dictionary

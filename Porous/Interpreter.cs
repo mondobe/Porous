@@ -37,5 +37,17 @@ namespace Porous
 
             return toRet;
         }
+
+        public override string ToString()
+        {
+            string toRet = "";
+
+            int count = dataStack.Count;
+
+            for (int i = 0; i < count; i++)
+                toRet += dataStack.Pop() + "\t- " + i + "\n";
+
+            return toRet;
+        }
     }
 }
