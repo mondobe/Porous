@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using UtahBase.Testing;
@@ -96,13 +98,17 @@ namespace Porous
         }
     }
 
+    /// <summary>
+    /// An instruction to push a callable function onto the stack. 
+    /// Generics are automatically resolved when a function is pushed.
+    /// </summary>
     public class PushFunctionInstruction : Instruction
     {
-        Function toPush;
+        GenericFunction toPush;
 
         public override PSignatureType signature => new(new List<PType>(), new List<PType> { toPush.signature });
 
-        public PushFunctionInstruction(Function toPush, ParseToken token) : base(token)
+        public PushFunctionInstruction(GenericFunction toPush, ParseToken token) : base(token)
         {
             this.toPush = toPush;
         }
@@ -113,6 +119,9 @@ namespace Porous
         }
     }
 
+    /// <summary>
+    /// An instruction designed to represent multiple binary arithmetic operators without extra boilerplate.
+    /// </summary>
     public class IntArithmeticInstruction : Instruction
     {
         Func<int, int, int> operation;
@@ -132,9 +141,13 @@ namespace Porous
         }
     }
 
+    /// <summary>
+    /// An instruction that executes whatever function is on the top of the stack.
+    /// </summary>
     public class DoInstruction : Instruction
     {
-        PSignatureType _signature;
+        PSignatureType _signature, genSig;
+        Stack<PType> typeStack;
 
         public override PSignatureType signature
         {
@@ -143,23 +156,205 @@ namespace Porous
                 PSignatureType toRet = new(new List<PType>(), new List<PType>());
                 toRet.ins.AddRange(_signature.ins);
                 toRet.outs.AddRange(_signature.outs);
-                toRet.ins.Add(_signature);
-                toRet.outs.Add(_signature);
+                toRet.ins.Add(genSig);
+                toRet.outs.Add(genSig);
                 return toRet;
             }
         }
 
-        public DoInstruction(PSignatureType signature, ParseToken token) : base(token) 
+        public DoInstruction(PSignatureType signature, Stack<PType> typeStack, ParseToken token) : base(token) 
         {
-            _signature = signature;
+            this.typeStack = new(new Stack<PType>(typeStack));
+            this.typeStack.Pop();
+            genSig = signature;
+            _signature = genSig.TypeCheck(this.typeStack);
         }
 
         public override void Execute(ref Stack<object> stack)
         {
-            Function func = (Function)stack.Pop();
-            foreach (Instruction i in func)
+            GenericFunction func = (GenericFunction)stack.Pop();
+
+            foreach (Instruction i in func.TypeCheck(typeStack))
                 i.Execute(ref stack);
             stack.Push(func);
+        }
+    }
+
+    public class DupInstruction : Instruction
+    {
+        public PType type;
+
+        public override PSignatureType signature => new(new List<PType> { type }, new List<PType> { type, type });
+
+        public DupInstruction(PType type, ParseToken token) : base(token)
+        {
+            this.type = type;
+        }
+
+        public override void Execute(ref Stack<object> stack)
+        {
+            object obj = stack.Pop();
+            stack.Push(obj);
+            stack.Push(obj);
+        }
+    }
+
+    public class DropInstruction : Instruction
+    {
+        public PType type;
+
+        public override PSignatureType signature => new(new List<PType> { type }, new List<PType> { });
+
+        public DropInstruction(PType type, ParseToken token) : base(token)
+        {
+            this.type = type;
+        }
+
+        public override void Execute(ref Stack<object> stack)
+        {
+            stack.Pop();
+        }
+    }
+
+    public class SwapInstruction : Instruction
+    {
+        public PType topType, bottomType;
+
+        public override PSignatureType signature => new(new List<PType> { bottomType, topType }, new List<PType> { topType, bottomType });
+
+        public SwapInstruction(PType bottomType, PType topType, ParseToken token) : base(token)
+        {
+            this.bottomType = bottomType;
+            this.topType = topType;
+        }
+
+        public override void Execute(ref Stack<object> stack)
+        {
+            object top = stack.Pop();
+            object bottom = stack.Pop();
+            stack.Push(top);
+            stack.Push(bottom);
+        }
+    }
+
+    public class OverInstruction : Instruction
+    {
+        public PType topType, bottomType;
+
+        public override PSignatureType signature => new(new List<PType> { bottomType, topType }, new List<PType> { bottomType, topType, bottomType });
+
+        public OverInstruction(PType bottomType, PType topType, ParseToken token) : base(token)
+        {
+            this.bottomType = bottomType;
+            this.topType = topType;
+        }
+
+        public override void Execute(ref Stack<object> stack)
+        {
+            object top = stack.Pop();
+            object bottom = stack.Peek();
+            stack.Push(top);
+            stack.Push(bottom);
+        }
+    }
+
+    public class ChooseInstruction : Instruction
+    {
+        public PType type;
+
+        public override PSignatureType signature => new(new List<PType> { type, type, PType.boolType }, new List<PType> { type });
+
+        public ChooseInstruction(PType type, ParseToken token) : base(token)
+        {
+            this.type = type;
+        }
+
+        public override void Execute(ref Stack<object> stack)
+        {
+            bool b = (bool)stack.Pop();
+            object top = stack.Pop();
+            object bottom = stack.Pop();
+            stack.Push(b ? top : bottom);
+        }
+    }
+
+    public class EqualsInstruction : Instruction
+    {
+        public PType type;
+
+        public override PSignatureType signature => new(new List<PType> { type, type }, new List<PType> { PType.boolType });
+        
+        public EqualsInstruction(PType type, ParseToken token) : base(token)
+        {
+            this.type = type;
+        }
+
+        public override void Execute(ref Stack<object> stack)
+        {
+            object top = stack.Pop();
+            object bottom = stack.Pop();
+            stack.Push(bottom == top);
+        }
+    }
+
+    public class PutInstruction : Instruction
+    {
+        public override PSignatureType signature => new(new List<PType> { PType.charType }, new List<PType> { });
+
+        public PutInstruction(ParseToken token) : base(token) { }
+
+        public override void Execute(ref Stack<object> stack)
+        {
+            Console.Write((char)stack.Pop());
+        }
+    }
+
+    public class ComparisonInstruction : Instruction
+    {
+        Func<int, int, bool> operation;
+
+        public override PSignatureType signature => new(new List<PType> { PType.intType, PType.intType }, new List<PType> { PType.boolType });
+
+        public ComparisonInstruction(Func<int, int, bool> operation, ParseToken token) : base(token) 
+        {
+            this.operation = operation;
+        }
+
+        public override void Execute(ref Stack<object> stack)
+        {
+            int rhs = (int)stack.Pop();
+            int lhs = (int)stack.Pop();
+            stack.Push(operation.Invoke(lhs, rhs));
+        }
+    }
+
+    public class NotInstruction : Instruction
+    {
+        public override PSignatureType signature => new(new List<PType> { PType.boolType }, new List<PType> { PType.boolType });
+
+        public NotInstruction(ParseToken token) : base(token) { }
+
+        public override void Execute(ref Stack<object> stack)
+        {
+            bool top = (bool)stack.Pop();
+            stack.Push(!top);
+        }
+    }
+
+    public class ExternInstruction : Instruction
+    {
+        public ExternalCall call;
+
+        public override PSignatureType signature => call.signature;
+
+        public ExternInstruction(ExternalCall call, ParseToken token) : base(token)
+        {
+            this.call = call;
+        }
+
+        public override void Execute(ref Stack<object> stack)
+        {
+            call.action(ref stack);
         }
     }
 }

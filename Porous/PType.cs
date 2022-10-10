@@ -1,5 +1,4 @@
-﻿using System.Security.Cryptography.X509Certificates;
-using UtahBase.Testing;
+﻿using UtahBase.Testing;
 
 namespace Porous
 {
@@ -85,7 +84,8 @@ namespace Porous
 
         public virtual void MatchGenerics(ref Dictionary<string, PType> generics, PType specific) 
         {
-            Console.WriteLine("Matching " + name + " with " + specific.name);
+            if(Program.verbose)
+                Console.WriteLine("Matching " + name + " with " + specific.name);
             if (!specific.Equals(this))
                 throw new PorousException("Type mismatch found in generic resolution.");
         }
@@ -103,9 +103,15 @@ namespace Porous
 
         public override void MatchGenerics(ref Dictionary<string, PType> generics, PType specific)
         {
-            Console.WriteLine("Matching " + name + " with " + specific.name);
+            if(Program.verbose)
+                Console.WriteLine("Matching " + name + " with " + specific.name);
             if (determines)
                 generics.Add(name, specific);
+        }
+
+        public override string ToString()
+        {
+            return determines ? "<" + name + ">" : name;
         }
     }
 
@@ -138,8 +144,16 @@ namespace Porous
             this.outs = outs;
         }
 
+        /// <summary>
+        /// Executes the effect of this signature on a given type stack. Used for type-checking.
+        /// </summary>
+        /// <param name="typeStack">The typestack on which to execute this.</param>
+        /// <exception cref="PorousException">Thrown if the types on the type stack are mismatched
+        /// with those in the input signature.</exception>
         public void Execute(ref Stack<PType> typeStack)
         {
+            if(Program.verbose)
+                Console.WriteLine("Type-executing " + this);
             for (int i = ins.Count - 1; i >= 0; i--)
             {
                 PType top = typeStack.Pop();
@@ -149,7 +163,24 @@ namespace Porous
             foreach (PType o in outs)
                 typeStack.Push(o);
         }
+        public PSignatureType TypeCheck(Stack<PType> typeStack)
+        {
+            // Match the input signature with the current type stack, throwing an error if anything
+            // doesn't match.
+            Dictionary<string, PType> replacements = new();
 
+            List<PType> specifics = new(typeStack);
+            for (int i = 0; i < ins.Count; i++)
+                ins[i].MatchGenerics(ref replacements, specifics[ins.Count - i - 1]);
+
+            return ReplaceGenerics(replacements);
+        }
+
+
+        /// <summary>
+        /// Returns a string representing the signature.
+        /// </summary>
+        /// <returns>(INPUT TYPES : OUTPUT TYPES)</returns>
         public override string ToString()
         {
             string toRet = "(";
@@ -161,6 +192,11 @@ namespace Porous
             return toRet + ")";
         }
 
+        /// <summary>
+        /// Replaces any generics present in this signature with some given generics.
+        /// </summary>
+        /// <param name="generics">A dictionary mapping generic type names to real, concrete types.</param>
+        /// <returns>A version of this signature with the generics replaced.</returns>
         public override PSignatureType ReplaceGenerics(Dictionary<string, PType> generics)
         {
             PSignatureType nSig = new(new List<PType>(), new List<PType>());
@@ -169,9 +205,18 @@ namespace Porous
             return nSig;
         }
 
+        /// <summary>
+        /// Traverses the signature and finds any generic types that may be present, then matches them with
+        /// existing concrete types on the type stack.
+        /// </summary>
+        /// <param name="generics">The working dictionary to which to add any found generics.</param>
+        /// <param name="specific">The specific signature with which to match this signature.</param>
+        /// <exception cref="PorousException">Thrown if the specific type signature does not match any 
+        /// non-generic elements.</exception>
         public override void MatchGenerics(ref Dictionary<string, PType> generics, PType specific) 
         {
-            Console.WriteLine("Matching " + name + " with " + specific.name);
+            if(Program.verbose)
+                Console.WriteLine("Matching " + name + " with " + specific.name);
             if (specific is PSignatureType s)
             {
                 if (s.ins.Count != ins.Count || s.outs.Count != outs.Count)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using TLexBase;
@@ -14,6 +15,8 @@ namespace Porous
 {
     public static class LexerParser
     {
+        public static string program = "";
+
         private const string lexer = @"
 :string=
 REQUIRE dq
@@ -35,19 +38,23 @@ ELSE REPEAT
 WRAP BACK ADD include
 
 :ops=
-TAGCHARS +-*/%<> oper
+TAGCHARS +-*/% oper
 
 :do=
 IF colon { ADD stmt CANCEL }
 ELSE CANCEL
 
 :boolOps=
-TAGCHARS <> nBoolOper
+TAGCHARS <> nBoolOp
+
+:boolOpsAreStmts=
+IF nBoolOp SKIP ELSE CANCEL
+ADD boolOp ADD stmt 
 
 :boolEqOps=
-IF nBoolOper NEXT ELSE CANCEL
-IF eq SKIP ELSE CANCEL
-WRAP BACK ADD oper
+IF nBoolOp NEXT ELSE CANCEL
+IF eq NEXT ELSE CANCEL
+WRAP BACK ADD boolOp ADD stmt
 
 :zeroToNine=
 TAGCHARS 0123456789 z9
@@ -83,6 +90,7 @@ WORD false ADD bool ADD stmt ADD expr
 :letter=
 IF ws CANCEL ELSE SKIP
 IF oper CANCEL ELSE SKIP
+IF boolOp CANCEL ELSE SKIP
 IF ocb CANCEL ELSE SKIP
 IF ccb CANCEL ELSE SKIP
 IF ( CANCEL ELSE SKIP
@@ -96,6 +104,7 @@ IF > CANCEL ELSE SKIP
 IF & CANCEL ELSE SKIP
 IF [ CANCEL ELSE SKIP
 IF ] CANCEL ELSE SKIP
+IF ! CANCEL ELSE SKIP
 ADD letter
 
 :deq=
@@ -107,6 +116,12 @@ WRAP BACK ADD letter
 REQUIRE letter
 ZEROORMORE letter
 WRAP BACK ADD word
+
+:extern=
+REQUIRE %
+REQUIRE !
+NEXT
+WRAP BACK ADD extern ADD stmt
 
 :rmws=
 IF ws DELETE CANCEL
@@ -146,25 +161,23 @@ word = stmt : global;
         /// Lexes a given string consistently with the lexer rules of Porous. Lexer brought to you by T-Lex.
         /// </summary>
         /// <param name="program">The given string, usually direct from the user.</param>
-        /// <param name="verbose">Whether or not to display debug information about the lexing process 
-        /// (activating this makes the program slower!)</param>
         /// <returns>A series of tokens that more fully describes the nature of the program</returns>
-        public static List<Token> Lex(string program, bool verbose = false)
+        public static List<Token> Lex(string program)
         {
-            Lexer l = CreateLexerFromString.StringToLexer(lexer, verbose);
-            return l.ApplyAll(program, verbose, 50000);
+            LexerParser.program = program;
+            Lexer l = CreateLexerFromString.StringToLexer(lexer, Program.verbose);
+            return l.ApplyAll(program, Program.verbose, 50000);
         }
 
         /// <summary>
         /// Parses a string of tokens consistently with the parser rules of Porous. Parser brought to you by Utah.
         /// </summary>
-        /// <param name="tox">The given string of tokens, usually from the lexer (<see cref="Lex(string, bool)"/></param>
-        /// <param name="verbose">Whether or not to display debug information about the parsing process</param>
+        /// <param name="tox">The given string of tokens, usually from the lexer (<see cref="Lex(string)"/></param>
         /// <returns>A tree of ParseTokens that can be easily processed to extract a full program</returns>
-        public static List<ParseToken> Parse(List<Token> tox, bool verbose = false)
+        public static List<ParseToken> Parse(List<Token> tox)
         {
-            Parser p = CreateParserFromString.FromString(parser, verbose);
-            return p.ParseTokens(tox, verbose:verbose);
+            Parser p = CreateParserFromString.FromString(parser, Program.verbose);
+            return p.ParseTokens(tox, verbose:Program.verbose);
         }
     }
 }

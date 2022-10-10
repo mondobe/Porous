@@ -14,23 +14,32 @@ namespace Porous
     /// </summary>
     public class PorousException : Exception
     {
+        public void Throw()
+        {
+            Console.Error.WriteLine("ERROR!");
+        }
+
         public PorousException() : base()
         {
+            Throw();
             throw new Exception("Porous program is malformed. No other information available.");
         }
 
         public PorousException(string message) : base(message)
         {
+            Throw();
             throw new Exception("Porous program is malformed: " + message);
         }
 
         public PorousException(ParseToken pt) : base()
         {
+            Throw();
             throw new Exception("Porous program is malformed at " + pt.toSimpleString);
         }
 
         public PorousException(ParseToken pt, string message) : base(message)
         {
+            Throw();
             throw new Exception("Porous program is malformed at " + pt.toSimpleString + ": " + message);
         }
     }

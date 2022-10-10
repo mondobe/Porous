@@ -101,7 +101,7 @@ namespace Porous
 
         public override PushFunctionInstruction Resolve(Stack<PType> typeStack)
         {
-            return new PushFunctionInstruction(toPush.TypeCheck(new List<PType>(), typeStack), token);
+            return new PushFunctionInstruction(toPush, token);
         }
     }
 
@@ -131,7 +131,7 @@ namespace Porous
         public override DoInstruction Resolve(Stack<PType> typeStack)
         {
             if (typeStack.Peek() is PSignatureType s)
-                return new DoInstruction(s, token);
+                return new DoInstruction(s, typeStack, token);
             throw new PorousException(token, "Tried to call something that was not a function.");
         }
     }
@@ -148,6 +148,130 @@ namespace Porous
         public override Instruction Resolve(Stack<PType> typeStack)
         {
             return DirectionProcessor.workingDict[toCall].Resolve(typeStack);
+        }
+    }
+
+    public class DupDirection : Direction
+    {
+        public DupDirection(ParseToken token) : base(token) { }
+
+        public override DupInstruction Resolve(Stack<PType> typeStack)
+        {
+            return new DupInstruction(typeStack.Peek(), token);
+        }
+    }
+
+    public class DropDirection : Direction
+    {
+        public DropDirection(ParseToken token) : base(token) { }
+
+        public override DropInstruction Resolve(Stack<PType> typeStack)
+        {
+            return new DropInstruction(typeStack.Peek(), token);
+        }
+    }
+
+    public class SwapDirection : Direction
+    {
+        public SwapDirection(ParseToken token) : base(token) { }
+
+        public override SwapInstruction Resolve(Stack<PType> typeStack)
+        {
+            List<PType> pList = typeStack.ToList();
+            return new SwapInstruction(pList[1], pList[0], token);
+        }
+    }
+
+    public class OverDirection : Direction
+    {
+        public OverDirection(ParseToken token) : base(token) { }
+
+        public override OverInstruction Resolve(Stack<PType> typeStack)
+        {
+            List<PType> pList = typeStack.ToList();
+            return new OverInstruction(pList[1], pList[0], token);
+        }
+    }
+
+    public class ChooseDirection : Direction
+    {
+        public ChooseDirection(ParseToken token) : base(token) { }
+
+        public override ChooseInstruction Resolve(Stack<PType> typeStack)
+        {
+            List<PType> pList = typeStack.ToList();
+            if (pList[0] != PType.boolType)
+                throw new PorousException(token, "Tried to call ? without a boolean value on top of the stack.");
+            if (!pList[1].Equals(pList[2]))
+                throw new PorousException(token, "Tried to call ? with two values of different types");
+            return new ChooseInstruction(pList[1], token);
+        }
+    }
+
+    public class EqualsDirection : Direction
+    {
+        public EqualsDirection(ParseToken token) : base(token) { }
+
+        public override EqualsInstruction Resolve(Stack<PType> typeStack)
+        {
+            List<PType> pList = typeStack.ToList();
+            if (pList[0] != pList[1])
+                throw new PorousException(token, "Tried to compare two values that are not of the same type.");
+            return new EqualsInstruction(pList[1], token);
+        }
+    }
+
+    public class PutDirection : Direction
+    {
+        public PutDirection(ParseToken token) : base(token) { }
+
+        public override Instruction Resolve(Stack<PType> typeStack)
+        {
+            return new PutInstruction(token);
+        }
+    }
+
+    public class ComparisonDirection : Direction
+    {
+        Func<int, int, bool> operation;
+
+        public ComparisonDirection(Func<int, int, bool> operation, ParseToken token) : base(token)
+        {
+            this.operation = operation;
+        }
+
+        public override ComparisonInstruction Resolve(Stack<PType> typeStack)
+        {
+            List<PType> pList = typeStack.ToList();
+            if (pList[0] != PType.intType || pList[1] != PType.intType)
+                throw new PorousException("Comparison operations must be called on two integers.");
+
+            return new ComparisonInstruction(operation, token);
+        }
+    }
+
+    public class NotDirection : Direction
+    {
+        public NotDirection(ParseToken token) : base(token) { }
+
+        public override NotInstruction Resolve(Stack<PType> typeStack)
+        {
+            return new NotInstruction(token);
+        }
+    }
+
+    public class ExternDirection : Direction
+    {
+        string call;
+
+        public ExternDirection(string call, ParseToken token) : base(token)
+        {
+            this.call = call;
+        }
+
+        public override ExternInstruction Resolve(Stack<PType> typeStack)
+        {
+            return new ExternInstruction(ExternalCall.calls[call], token);
         }
     }
 }

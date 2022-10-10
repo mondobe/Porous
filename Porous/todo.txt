@@ -1,10 +1,7 @@
 ﻿TODO
 
 	Function overloading
-	Stack manipulation instructions
-	Do instruction
 	Boolean algebra
-	While instruction
 	Tertiary instruction
 	Imports
 	Implement heap
@@ -20,7 +17,7 @@
 
 DOING
 
-	ADD COMMENTS PLEASE FOR THE LOVE OF
+	While instruction
 
 DONE
 
@@ -36,3 +33,6 @@ DONE
 	Push function instruction
 	Explicit generics in functions
 	Global dictionary
+	Do instruction
+	Stack manipulation instructions
+	External calls
