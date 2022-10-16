@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using TLexBase;
 using TLexBase.Testing;
 using TLexCLI;
@@ -10,7 +11,7 @@ using UtahCLI;
 
 namespace Porous
 {
-    public class Program
+    public static class Program
     {
         public static bool verbose;
 
@@ -20,65 +21,33 @@ namespace Porous
             stopwatch.Start();
 
             InterpretDictionary(ProcessProgram(@"
-main = ( : )
-{	
-	 1 1 fibo : drop
-}
-
-fibo = (int int : )
+main = (:)
 {
-	over printInt : drop
-	',' . ' ' .
-	dup printInt : drop
-	',' . ' ' .
-
-	fiboInternal : drop
-	drop drop
+    hello nl 6 prInt
 }
 
-fiboInternal = (int int : int int)
-{
-    swap over +
-    dup printInt : drop
-	',' . ' ' .
-    fiboInternal : drop
-}
-
-printInt = (int : )
-{
-	dup 0 <
-	(int : int) { } swap
-	(int : int) { -1 * '-' . } swap
-	? : drop
-	printPart : drop
-}
-
-printPart = (int : )
-{
-	dup
-	(int : ) { digitToChar : drop . } swap
-	(int : )
-	{
-		dup 10 / printPart : drop
-		10 % digitToChar : drop .
-	} swap
-	9 > ? : drop
-}
-
-digitToChar = (int : char)
-{
-    %!dtc
-}
-
+hello % { %!hello }
+nl % { %!nl }
+prInt % { %!printInt }
 ", false));
             stopwatch.Stop();
             Console.WriteLine("\nDone in " + stopwatch.ElapsedMilliseconds + " ms");
         }
 
-        public static void DigitToChar(ref Stack<object> stack)
+        public static void PrintInt(ref Stack<object> stack)
         {
-            int digit = (int)stack.Pop();
-            stack.Push("0123456789"[digit]);
+            int number = (int)stack.Pop();
+            Console.Write(number);
+        }
+
+        public static void NewLine(ref Stack<object> stack)
+        {
+            Console.WriteLine();
+        }
+
+        public static void HelloWorld(ref Stack<object> stack)
+        {
+            Console.Write("Hello, world! " + DateTime.Now.ToString());
         }
 
         /// <summary>
@@ -104,12 +73,23 @@ digitToChar = (int : char)
 
             // Add all of the headers to a global list
             foreach (ParseToken global in pts)
-                DirectionProcessor.headers.Add(global.children[0].content);
+            {
+                if (global.tags.Contains("macro"))
+                    DirectionProcessor.macros.Add(global.children[0].content, global.children[2]);
+                else DirectionProcessor.headers.Add(global.children[0].content);
+            }
 
             // Using the headers as references, process each of the directions and add them to a dictionary
             foreach (ParseToken global in pts)
+            {
+                if (global.tags.Contains("macro"))
+                    continue;
+                List<Direction> dirs = DirectionProcessor.ProcessDirection(global.children[2]);
+                if(dirs.Count > 1)
+                    throw new PorousException(global.children[2], "Global direction must resolve to a single instruction.");
                 DirectionProcessor.workingDict.Add(global.children[0].content,
-                    DirectionProcessor.ProcessDirection(global.children[2]));
+                    dirs[0]);
+            }
 
             return DirectionProcessor.workingDict;
         }
@@ -142,6 +122,8 @@ digitToChar = (int : char)
             if(verbose)
                 Console.WriteLine(interpreter);
         }
+
+        public static Stack<T> Copy<T>(this Stack<T> stack) => new(new Stack<T>(stack));
     }
 }
 

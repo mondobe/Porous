@@ -13,8 +13,12 @@ namespace Porous
 
         public static Dictionary<string, ExternalCall> calls = new()
         {
-            { "dtc", new ExternalCall(new PSignatureType(new List<PType>{ PType.intType }, new List<PType>{ PType.charType }),
-                Program.DigitToChar) }
+            { "printInt", new ExternalCall(new PSignatureType(new List<PType>{ PType.intType }, new List<PType>()),
+                Program.PrintInt) },
+            { "hello", new ExternalCall(new PSignatureType(new List<PType>(), new List<PType>()),
+                Program.HelloWorld) },
+            { "nl", new ExternalCall(new PSignatureType(new List<PType>(), new List<PType>()),
+                Program.NewLine) }
         };
 
         public ExternalCall(PSignatureType signature, ExternalActionDelegate action)

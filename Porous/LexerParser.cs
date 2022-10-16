@@ -155,6 +155,7 @@ sig block : blockType stmt;
     # Global context (decl/body)
 
 word = stmt : global;
+word % block : global macro;
 ";
 
         /// <summary>

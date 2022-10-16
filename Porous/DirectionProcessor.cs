@@ -14,6 +14,7 @@ namespace Porous
     public static class DirectionProcessor
     {
         public static Dictionary<string, Direction> workingDict = new();
+        public static Dictionary<string, ParseToken> macros = new();
         public static List<string> headers = new();
 
         /// <summary>
@@ -23,6 +24,7 @@ namespace Porous
         {
             workingDict = new Dictionary<string, Direction>();
             headers = new List<string>();
+            macros = new Dictionary<string, ParseToken>();
         }
 
         /// <summary>
@@ -44,7 +46,7 @@ namespace Porous
 
             // Process the directions from the input's children
             for (int i = 1; i < tox.Count - 1; i++)
-                exDirs.Add(ProcessDirection(tox[i]));
+                exDirs.AddRange(ProcessDirection(tox[i]));
 
             return exDirs;
         }
@@ -55,7 +57,7 @@ namespace Porous
         /// <param name="pt">The ParseToken that presumably describes a direction.</param>
         /// <returns>A generic direction to be part of a function or global.</returns>
         /// <exception cref="PorousException">Thrown if the input ParseToken is not a statement.</exception>
-        public static Direction ProcessDirection(ParseToken pt)
+        public static List<Direction> ProcessDirection(ParseToken pt)
         {
             // Throw an error if a statement is not recieved
             if (!pt.tags.Contains("stmt"))
@@ -63,23 +65,23 @@ namespace Porous
 
             // Parse an external call
             if (pt.tags.Contains("extern"))
-                return new ExternDirection(pt.content.Substring(2), pt);
+                return new List<Direction> { new ExternDirection(pt.content.Substring(2), pt) };
 
             // Parse a PushIntDirection
             if (pt.tags.Contains("int"))
-                return new PushIntDirection(int.Parse(pt.content), pt);
+                return new List<Direction> { new PushIntDirection(int.Parse(pt.content), pt) };
 
             // Parse a PushBoolDirection
             if (pt.tags.Contains("bool"))
-                return new PushBoolDirection(bool.Parse(pt.content), pt);
+                return new List<Direction> { new PushBoolDirection(bool.Parse(pt.content), pt) };
 
             // Parse a PushCharDirection
             if (pt.tags.Contains("char"))
-                return new PushCharDirection(pt.content[1], pt);
+                return new List<Direction> { new PushCharDirection(pt.content[1], pt) };
 
             // Parse a mathematical operation
             if (pt.tags.Contains("oper"))
-                return new IntArithmeticDirection(pt.content switch
+                return new List<Direction>{ new IntArithmeticDirection(pt.content switch
                 {
                     "+" => (int lhs, int rhs) => lhs + rhs,
                     "-" => (int lhs, int rhs) => lhs - rhs,
@@ -87,18 +89,18 @@ namespace Porous
                     "/" => (int lhs, int rhs) => lhs / rhs,
                     "%" => (int lhs, int rhs) => lhs % rhs,
                     _ => throw new PorousException(pt, "Operation not yet implemented.")
-                }, pt);
+                }, pt) };
 
             // Parse a mathematical operation
             if (pt.tags.Contains("boolOp"))
-                return new ComparisonDirection(pt.content switch
+                return new List<Direction> { new ComparisonDirection(pt.content switch
                 {
                     ">" => (int lhs, int rhs) => lhs > rhs,
                     "<" => (int lhs, int rhs) => lhs < rhs,
                     ">=" => (int lhs, int rhs) => lhs >= rhs,
                     "<=" => (int lhs, int rhs) => lhs <= rhs,
                     _ => throw new PorousException(pt, "Operation not yet implemented.")
-                }, pt);
+                }, pt) };
 
             // Parse a function block
             if(pt.tags.Contains("blockType"))
@@ -108,30 +110,43 @@ namespace Porous
                 // Process each of the directions in the function
                 List<ParseToken> directions = pt.children[1].children;
                 for (int i = 1; i < directions.Count - 1; i++)
-                    funcBody.Add(ProcessDirection(directions[i]));
+                    funcBody.AddRange(ProcessDirection(directions[i]));
 
                 // Parse the signature of the function and return the PushFunctionDirection
-                return new PushFunctionDirection(
+                return new List<Direction>{ new PushFunctionDirection(
                     new GenericFunction((PSignatureType)PType.ParseType(pt.children[0]), funcBody, new List<string>())
-                    , pt);
+                    , pt) };
             }
 
             // Parse a global call
             if (headers.Contains(pt.content))
-                return new CallDirection(pt.content, pt);
+                return new List<Direction> { new CallDirection(pt.content, pt) };
+
+            // Parse a macro
+            if (macros.ContainsKey(pt.content))
+            {
+                if(Program.verbose)
+                    Console.WriteLine("Unwrapping macro " + pt.toSimpleString);
+                List<Direction> toRet = new();
+                for (int i = 1; i < macros[pt.content].children.Count - 1; i++)
+                {
+                    toRet.AddRange(ProcessDirection(macros[pt.content].children[i]));
+                }
+                return toRet;
+            }
 
             // Parse miscellaneous directions
             return pt.content switch
             {
-                ":" => new DoDirection(pt),
-                "dup" => new DupDirection(pt),
-                "drop" => new DropDirection(pt),
-                "swap" => new SwapDirection(pt),
-                "over" => new OverDirection(pt),
-                "?" => new ChooseDirection(pt),
-                "==" => new EqualsDirection(pt),
-                "." => new PutDirection(pt),
-                "!" => new NotDirection(pt),
+                ":" => new List<Direction> { new DoDirection(pt) },
+                "dup" => new List<Direction> { new DupDirection(pt) },
+                "drop" => new List<Direction> { new DropDirection(pt) },
+                "swap" => new List<Direction> { new SwapDirection(pt) },
+                "over" => new List<Direction> { new OverDirection(pt) },
+                "?" => new List<Direction> { new ChooseDirection(pt) },
+                "==" => new List<Direction> { new EqualsDirection(pt) },
+                "." => new List<Direction> { new PutDirection(pt) },
+                "!" => new List<Direction> { new NotDirection(pt) },
                 _ => throw new PorousException(pt, "Direction not recognized. Did you forget to include a file?")
             };
         }

@@ -36,3 +36,4 @@ DONE
 	Do instruction
 	Stack manipulation instructions
 	External calls
+	Macros

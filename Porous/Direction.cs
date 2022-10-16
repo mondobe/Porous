@@ -203,7 +203,8 @@ namespace Porous
             if (pList[0] != PType.boolType)
                 throw new PorousException(token, "Tried to call ? without a boolean value on top of the stack.");
             if (!pList[1].Equals(pList[2]))
-                throw new PorousException(token, "Tried to call ? with two values of different types");
+                throw new PorousException(token, "Tried to call ? with two values of different types: " 
+                    + pList[1] + " / " + pList[2]);
             return new ChooseInstruction(pList[1], token);
         }
     }
@@ -215,8 +216,9 @@ namespace Porous
         public override EqualsInstruction Resolve(Stack<PType> typeStack)
         {
             List<PType> pList = typeStack.ToList();
-            if (pList[0] != pList[1])
-                throw new PorousException(token, "Tried to compare two values that are not of the same type.");
+            if (!pList[0].Equals(pList[1]))
+                throw new PorousException(token, "Tried to compare two values that are not of the same type: " 
+                    + pList[0] + " / " + pList[1]);
             return new EqualsInstruction(pList[1], token);
         }
     }
@@ -243,7 +245,7 @@ namespace Porous
         public override ComparisonInstruction Resolve(Stack<PType> typeStack)
         {
             List<PType> pList = typeStack.ToList();
-            if (pList[0] != PType.intType || pList[1] != PType.intType)
+            if (!pList[0].Equals(PType.intType) || !pList[1].Equals(PType.intType))
                 throw new PorousException("Comparison operations must be called on two integers.");
 
             return new ComparisonInstruction(operation, token);

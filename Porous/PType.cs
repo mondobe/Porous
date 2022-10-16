@@ -176,7 +176,6 @@ namespace Porous
             return ReplaceGenerics(replacements);
         }
 
-
         /// <summary>
         /// Returns a string representing the signature.
         /// </summary>
@@ -238,8 +237,8 @@ namespace Porous
         public override bool Equals(object? obj)
         {
             if (obj is PSignatureType other)
-                return !ins.Select((t, i) => other.ins[i] == t).Contains(false)
-                    && !outs.Select((t, i) => other.outs[i] == t).Contains(false);
+                return !ins.Select((t, i) => other.ins[i].Equals(t)).Contains(false)
+                    && !outs.Select((t, i) => other.outs[i].Equals(t)).Contains(false);
             return false;
         }
     }

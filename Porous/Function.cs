@@ -82,7 +82,7 @@ namespace Porous
                 if(Program.verbose)
                     Console.WriteLine("Out: " + signature.outs[i].ReplaceGenerics(replacements) + "\tGot: " + checkStack.Peek());
                 if (!checkStack.Pop().Equals(signature.outs[i].ReplaceGenerics(replacements)))
-                    throw new PorousException("Ending signature of function does not match result of type checking!");
+                    throw new PorousException(body[0].token, "Ending signature of function does not match result of type checking!");
             }
 
             if (checkStack.Count != 0)

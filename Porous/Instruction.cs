@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using UtahBase.Testing;
@@ -164,7 +165,7 @@ namespace Porous
 
         public DoInstruction(PSignatureType signature, Stack<PType> typeStack, ParseToken token) : base(token) 
         {
-            this.typeStack = new(new Stack<PType>(typeStack));
+            this.typeStack = typeStack.Copy();
             this.typeStack.Pop();
             genSig = signature;
             _signature = genSig.TypeCheck(this.typeStack);
@@ -343,7 +344,7 @@ namespace Porous
 
     public class ExternInstruction : Instruction
     {
-        public ExternalCall call;
+        ExternalCall call;
 
         public override PSignatureType signature => call.signature;
 
