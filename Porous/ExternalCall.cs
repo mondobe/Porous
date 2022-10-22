@@ -17,8 +17,6 @@ namespace Porous
                 Program.PrintInt) },
             { "hello", new ExternalCall(new PSignatureType(new List<PType>(), new List<PType>()),
                 Program.HelloWorld) },
-            { "nl", new ExternalCall(new PSignatureType(new List<PType>(), new List<PType>()),
-                Program.NewLine) }
         };
 
         public ExternalCall(PSignatureType signature, ExternalActionDelegate action)

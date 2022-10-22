@@ -105,6 +105,7 @@ IF & CANCEL ELSE SKIP
 IF [ CANCEL ELSE SKIP
 IF ] CANCEL ELSE SKIP
 IF ! CANCEL ELSE SKIP
+IF | CANCEL ELSE SKIP
 ADD letter
 
 :deq=
@@ -151,6 +152,8 @@ word :: stmt;
 sig block : blockType stmt;
 
 [ expr* ] : expr array;
+
+| type* | : curry stmt;
 
     # Global context (decl/body)
 

@@ -105,6 +105,7 @@ namespace Porous
     {
         public PSignatureType signature;
         public List<Instruction> body;
+        public Stack<object> curryStack = new();
 
         public Function(PSignatureType signature, List<Instruction> body)
         {
@@ -117,5 +118,56 @@ namespace Porous
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public override string ToString() => signature.ToString();
+
+        public void Execute(ref Stack<object> stack)
+        {
+            Stack<object> tempStack = new();
+
+            // Transfer the inputs of the function out temporarily
+            for (int t = 0; t < signature.ins.Count; t++)
+                tempStack.Push(stack.Pop());
+
+            // Add the curried inputs
+            int curryCount = curryStack.Count;
+            for (int i = 0; i < curryCount; i++)
+                stack.Push(curryStack.Pop());
+
+            // Transfer the regular inputs back
+            for (int t = 0; t < signature.ins.Count; t++)
+                stack.Push(tempStack.Pop());
+
+            // Execute the function
+            foreach (Instruction i in body)
+                i.Execute(ref stack);
+
+            // Transfer the outputs of the function out temporarily
+            for (int t = 0; t < signature.outs.Count; t++)
+                tempStack.Push(stack.Pop());
+
+            // Re-curry the outputs
+            for (int i = 0; i < curryCount; i++)
+                curryStack.Push(stack.Pop());
+
+            // Transfer the regular outputs back
+            for (int t = 0; t < signature.outs.Count; t++)
+                stack.Push(tempStack.Pop());
+        }
+
+        public void Curry(List<PType> types, ref Stack<object> stack)
+        {
+            if (Program.verbose)
+                Console.WriteLine("Currying " + signature);
+
+            signature.Curry(types);
+            for(int i = 0; i < types.Count; i++)
+            {
+                curryStack.Push(stack.Pop());
+                if(Program.verbose)
+                    Console.WriteLine("\tCurrying with " + types[i] + "(" + curryStack.Peek() + ")");
+            }
+
+            if (Program.verbose)
+                Console.WriteLine("Curried " + signature);
+        }
     }
 }

@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using UtahBase.Testing;
@@ -105,13 +102,13 @@ namespace Porous
     /// </summary>
     public class PushFunctionInstruction : Instruction
     {
-        GenericFunction toPush;
+        Function toPush;
 
         public override PSignatureType signature => new(new List<PType>(), new List<PType> { toPush.signature });
 
-        public PushFunctionInstruction(GenericFunction toPush, ParseToken token) : base(token)
+        public PushFunctionInstruction(GenericFunction toPush, Stack<PType> typeStack, ParseToken token) : base(token)
         {
-            this.toPush = toPush;
+            this.toPush = toPush.TypeCheck(typeStack);
         }
 
         public override void Execute(ref Stack<object> stack)
@@ -147,36 +144,30 @@ namespace Porous
     /// </summary>
     public class DoInstruction : Instruction
     {
-        PSignatureType _signature, genSig;
-        Stack<PType> typeStack;
+        PSignatureType topSig;
 
         public override PSignatureType signature
         {
             get
             {
                 PSignatureType toRet = new(new List<PType>(), new List<PType>());
-                toRet.ins.AddRange(_signature.ins);
-                toRet.outs.AddRange(_signature.outs);
-                toRet.ins.Add(genSig);
-                toRet.outs.Add(genSig);
+                toRet.ins.AddRange(topSig.ins);
+                toRet.outs.AddRange(topSig.outs);
+                toRet.ins.Add(topSig);
+                toRet.outs.Add(topSig);
                 return toRet;
             }
         }
 
-        public DoInstruction(PSignatureType signature, Stack<PType> typeStack, ParseToken token) : base(token) 
+        public DoInstruction(Stack<PType> typeStack, ParseToken token) : base(token) 
         {
-            this.typeStack = typeStack.Copy();
-            this.typeStack.Pop();
-            genSig = signature;
-            _signature = genSig.TypeCheck(this.typeStack);
+            topSig = (PSignatureType)typeStack.Peek();
         }
 
         public override void Execute(ref Stack<object> stack)
         {
-            GenericFunction func = (GenericFunction)stack.Pop();
-
-            foreach (Instruction i in func.TypeCheck(typeStack))
-                i.Execute(ref stack);
+            Function func = (Function)stack.Pop();
+            func.Execute(ref stack);
             stack.Push(func);
         }
     }
@@ -356,6 +347,59 @@ namespace Porous
         public override void Execute(ref Stack<object> stack)
         {
             call.action(ref stack);
+        }
+    }
+
+    public class WhileInstruction : Instruction
+    {
+        readonly Stack<PType> typeStack;
+
+        public override PSignatureType signature => new(new List<PType> {
+            new PSignatureType(new List<PType>(), new List<PType>{ PType.boolType }), PType.boolType
+        }, new List<PType>
+        {
+            new PSignatureType(new List<PType>(), new List<PType>{ PType.boolType })
+        });
+        
+        public WhileInstruction(ParseToken token) : base(token)
+        {
+            typeStack = new Stack<PType>();
+            typeStack.Push(PType.boolType);
+        }
+
+        public override void Execute(ref Stack<object> stack)
+        {
+            bool keepGoing = (bool)stack.Pop();
+            Function fn = (Function)stack.Pop();
+            while(keepGoing)
+            {
+                fn.Execute(ref stack);
+                keepGoing = (bool)stack.Pop();
+            }
+            stack.Push(fn);
+        }
+    }
+
+    public class CurryInstruction : Instruction
+    {
+        List<PType> types;
+        PSignatureType initial, final;
+
+        public override PSignatureType signature => new(types.Concat(new List<PType> { initial }).ToList(), new List<PType> { final });
+
+        public CurryInstruction(List<PType> types, PSignatureType initial, ParseToken token) : base(token)
+        {
+            this.types = types;
+            this.initial = initial;
+            final = initial.Duplicate();
+            final.Curry(types);
+        }
+
+        public override void Execute(ref Stack<object> stack)
+        {
+            Function fn = (Function)stack.Pop();
+            fn.Curry(types, ref stack);
+            stack.Push(fn);
         }
     }
 }

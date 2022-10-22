@@ -163,6 +163,7 @@ namespace Porous
             foreach (PType o in outs)
                 typeStack.Push(o);
         }
+
         public PSignatureType TypeCheck(Stack<PType> typeStack)
         {
             // Match the input signature with the current type stack, throwing an error if anything
@@ -174,6 +175,24 @@ namespace Porous
                 ins[i].MatchGenerics(ref replacements, specifics[ins.Count - i - 1]);
 
             return ReplaceGenerics(replacements);
+        }
+
+        private void CurryOne(PType type)
+        {
+            if (!ins[0].Equals(type))
+                throw new PorousException("Tried to curry function with types that do not match inputs!");
+            if (!outs[0].Equals(type))
+                throw new PorousException("Tried to curry function with types that do not match outputs!");
+            ins.RemoveAt(0);
+            outs.RemoveAt(0);
+        }
+
+        public void Curry(List<PType> types)
+        {
+            for(int i = 0; i < types.Count; i++)
+            {
+                CurryOne(types[i]);
+            }
         }
 
         /// <summary>
@@ -237,9 +256,21 @@ namespace Porous
         public override bool Equals(object? obj)
         {
             if (obj is PSignatureType other)
+            {
+                if (other.ins.Count != ins.Count || other.outs.Count != outs.Count)
+                    return false;
                 return !ins.Select((t, i) => other.ins[i].Equals(t)).Contains(false)
                     && !outs.Select((t, i) => other.outs[i].Equals(t)).Contains(false);
+            }
             return false;
+        }
+
+        public PSignatureType Duplicate()
+        {
+            PSignatureType toRet = new(new List<PType>(), new List<PType>());
+            toRet.ins.AddRange(ins);
+            toRet.outs.AddRange(outs);
+            return toRet;
         }
     }
 }

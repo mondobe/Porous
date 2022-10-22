@@ -118,6 +118,17 @@ namespace Porous
                     , pt) };
             }
 
+            // Parse a curry
+            if(pt.tags.Contains("curry"))
+            {
+                List<PType> types = new();
+
+                for (int i = 1; i < pt.children.Count - 1; i++)
+                    types.Add(PType.ParseType(pt.children[i]));
+
+                return new List<Direction> { new CurryDirection(types, pt) };
+            }
+
             // Parse a global call
             if (headers.Contains(pt.content))
                 return new List<Direction> { new CallDirection(pt.content, pt) };
@@ -139,6 +150,7 @@ namespace Porous
             return pt.content switch
             {
                 ":" => new List<Direction> { new DoDirection(pt) },
+                "while" => new List<Direction> { new WhileDirection(pt) },
                 "dup" => new List<Direction> { new DupDirection(pt) },
                 "drop" => new List<Direction> { new DropDirection(pt) },
                 "swap" => new List<Direction> { new SwapDirection(pt) },

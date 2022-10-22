@@ -1,8 +1,6 @@
 ﻿TODO
 
 	Function overloading
-	Boolean algebra
-	Tertiary instruction
 	Imports
 	Implement heap
 	Reference/deref instruction
@@ -17,7 +15,7 @@
 
 DOING
 
-	While instruction
+	Boolean algebra
 
 DONE
 
@@ -37,3 +35,6 @@ DONE
 	Stack manipulation instructions
 	External calls
 	Macros
+	While instruction
+	Function currying
+	Tertiary instruction

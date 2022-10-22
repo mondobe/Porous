@@ -101,7 +101,7 @@ namespace Porous
 
         public override PushFunctionInstruction Resolve(Stack<PType> typeStack)
         {
-            return new PushFunctionInstruction(toPush, token);
+            return new PushFunctionInstruction(toPush, typeStack, token);
         }
     }
 
@@ -131,7 +131,7 @@ namespace Porous
         public override DoInstruction Resolve(Stack<PType> typeStack)
         {
             if (typeStack.Peek() is PSignatureType s)
-                return new DoInstruction(s, typeStack, token);
+                return new DoInstruction(typeStack, token);
             throw new PorousException(token, "Tried to call something that was not a function.");
         }
     }
@@ -274,6 +274,43 @@ namespace Porous
         public override ExternInstruction Resolve(Stack<PType> typeStack)
         {
             return new ExternInstruction(ExternalCall.calls[call], token);
+        }
+    }
+
+    public class WhileDirection : Direction
+    {
+        public WhileDirection(ParseToken token) : base(token) { }
+
+        public override WhileInstruction Resolve(Stack<PType> typeStack)
+        {
+            List<PType> pList = typeStack.ToList();
+
+            if (pList[1] is PSignatureType s)
+            {
+                if (!s.Equals(new PSignatureType(new List<PType>(), new List<PType> { PType.boolType })))
+                    throw new PorousException(token, "Tried to call while on a function without the signature (: bool). Signature was " + s);
+                if (!pList[0].Equals(PType.boolType))
+                    throw new PorousException(token, "Tried to call while without a bool on the top of the stack.");
+                return new WhileInstruction(token);
+            }
+            throw new PorousException(token, "Tried to call while on something that was not a function.");
+        }
+    }
+
+    public class CurryDirection : Direction
+    {
+        List<PType> types;
+
+        public CurryDirection(List<PType> types, ParseToken token) : base(token)
+        {
+            this.types = types;
+        }
+
+        public override CurryInstruction Resolve(Stack<PType> typeStack)
+        {
+            PSignatureType sig = typeStack.Peek() as PSignatureType 
+                ?? throw new PorousException(token, "Tried to curry an object that was not a function.");
+            return new CurryInstruction(types, sig, token);
         }
     }
 }

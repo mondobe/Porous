@@ -23,13 +23,52 @@ namespace Porous
             InterpretDictionary(ProcessProgram(@"
 main = (:)
 {
-    hello nl 6 prInt
+    1 prInt nl
+    1 prInt nl
+    fibo 20 repeat ;
+}
+
+_fibo = (int int : int int)
+{                   // a b
+    swap over +     // b (a + b)
+    dup prInt nl
+}
+
+fibo % 
+{
+    1 1 _fibo |int int| 
+}
+
+repeat = ((:) int :)
+{
+    swap over                   // int (:) int
+    ((:) int : (:) int bool)
+    {                           // (:) int
+        swap : swap             // (:) int
+        1 -                     // (:) int
+        dup 0 >                 // (:) int bool
+    } |(:) int|                 // int (: bool)
+
+    swap 0 >                    // (: bool) bool
+    while                       // (: bool)
+    drop
+}
+
+concat = ((:) (:) : (:))
+{
+    ((:) (:) : (:) (:))
+    {
+        swap : swap :
+    } |(:) (:)|
 }
 
 hello % { %!hello }
-nl % { %!nl }
 prInt % { %!printInt }
-", false));
+doWhile % { true while }
+; % { : drop }
+" + "nl % { '\n' . }"
+
+, verbose: false));
             stopwatch.Stop();
             Console.WriteLine("\nDone in " + stopwatch.ElapsedMilliseconds + " ms");
         }
@@ -38,11 +77,6 @@ prInt % { %!printInt }
         {
             int number = (int)stack.Pop();
             Console.Write(number);
-        }
-
-        public static void NewLine(ref Stack<object> stack)
-        {
-            Console.WriteLine();
         }
 
         public static void HelloWorld(ref Stack<object> stack)
@@ -113,7 +147,7 @@ prInt % { %!printInt }
             mainInstr.Execute(ref interpreter.dataStack);
 
             // Since the main instruction should be a function, also execute :
-            new DoInstruction(mainInstr.signature, new Stack<PType>(new List<PType> { mainInstr.signature }), 
+            new DoInstruction(new Stack<PType>(new List<PType> { mainInstr.signature }), 
                 new ParseToken(new List<ParseToken>(), new List<string>()))
                 .Execute(ref interpreter.dataStack);
 
